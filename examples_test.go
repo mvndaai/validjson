@@ -36,44 +36,61 @@ func (ex example) Redacted(_ context.Context) any {
 	return ex
 }
 
-func TestValid(t *testing.T) {
-	body := []byte(`{
-		"upper": "up",
-		"trimmed": " remove spaces ",
-		"secret": "caution",
-		"required": true
-	}`)
-
-	var ex example
-	err := validjson.Unmarshal(context.Background(), body, &ex)
-	require.NoError(t, err)
-
-	t.Logf("%#v", ex)
-	//t.Error("show the log")
-}
-
 type Fielder interface {
 	Fields() map[string]any
 }
 
-func TestInvalid(t *testing.T) {
-	body := []byte(`{
-		"upper": "up",
-		"trimmed": " remove spaces ",
-		"secret": "caution",
-		"required": false
-	}`)
+func TestExamples(t *testing.T) {
+	tests := []struct {
+		name        string
+		body        string
+		expectError bool
+	}{
+		{
+			name: "valid",
+			body: `{
+				"upper": "up",
+				"trimmed": " remove spaces ",
+				"secret": "caution",
+				"required": true
+			}`,
+			expectError: false,
+		},
+		{
+			name:        "empty",
+			body:        ``,
+			expectError: true,
+		},
+		{
+			name: "invalid",
+			body: `{
+				"upper": "up",
+				"trimmed": " remove spaces ",
+				"secret": "caution",
+				"required": false
+			}`,
+			expectError: true,
+		},
+	}
 
-	ctx := context.Background()
-	ctx = ctxerr.SetField(ctx, "pathParam", "id")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-	var ex example
-	err := validjson.Unmarshal(ctx, body, &ex)
-	require.Error(t, err)
+			ctx := context.Background()
+			ctx = ctxerr.SetField(ctx, "pathParam", "id")
 
-	fields := err.(Fielder).Fields()
-	b, _ := json.MarshalIndent(fields, "", "\t")
-	t.Log("err:", err.Error())
-	t.Log("fields:", string(b))
-	//t.Error("show the log")
+			var ex example
+			err := validjson.Unmarshal(ctx, []byte(tt.body), &ex)
+			require.Equal(t, err != nil, tt.expectError)
+
+			t.Logf("body %#v", ex)
+			if err != nil {
+				fields := err.(Fielder).Fields()
+				b, _ := json.MarshalIndent(fields, "", "\t")
+				t.Log("err:", err.Error())
+				t.Log("fields:", string(b))
+			}
+
+		})
+	}
 }
