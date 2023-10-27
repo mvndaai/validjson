@@ -27,9 +27,15 @@ type ContextValidator interface {
 type Normalizer interface {
 	Normalize()
 }
-type ContextNormalizer interface{ Normalize(context.Context) }
-type Redactor interface{ Redact() any }
-type ContextRedactor interface{ Redact(context.Context) any }
+type ContextNormalizer interface {
+	Normalize(context.Context)
+}
+type Redactor interface {
+	Redact() any
+}
+type ContextRedactor interface {
+	Redact(context.Context) any
+}
 
 func Unmarshal(ctx context.Context, b []byte, i any) error {
 	if len(b) == 0 {
