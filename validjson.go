@@ -18,12 +18,18 @@ const (
 	fieldKeyBody = "body"
 )
 
-type Validator interface{ Validate() error }
-type ContextValidator interface{ Validate(context.Context) error }
-type Normalizer interface{ Normalize() }
+type Validator interface {
+	Validate() error
+}
+type ContextValidator interface {
+	Validate(context.Context) error
+}
+type Normalizer interface {
+	Normalize()
+}
 type ContextNormalizer interface{ Normalize(context.Context) }
-type Redactor interface{ Redacted() any }
-type ContextRedactor interface{ Redacted(context.Context) any }
+type Redactor interface{ Redact() any }
+type ContextRedactor interface{ Redact(context.Context) any }
 
 func Unmarshal(ctx context.Context, b []byte, i any) error {
 	if len(b) == 0 {
@@ -60,9 +66,9 @@ func Unmarshal(ctx context.Context, b []byte, i any) error {
 func TryToRedact(ctx context.Context, a any) any {
 	switch v := a.(type) {
 	case Redactor:
-		return v.Redacted()
+		return v.Redact()
 	case ContextRedactor:
-		return v.Redacted(ctx)
+		return v.Redact(ctx)
 	}
 	return a
 }

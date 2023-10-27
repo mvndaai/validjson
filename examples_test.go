@@ -31,7 +31,7 @@ func (ex example) Validate() error {
 	return nil
 }
 
-func (ex example) Redacted(_ context.Context) any {
+func (ex example) Redact(_ context.Context) any {
 	ex.Secret = "*****"
 	return ex
 }

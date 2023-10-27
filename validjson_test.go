@@ -27,12 +27,12 @@ func (s *normalContext) Normalize(context.Context)       { s.V = normalizedValue
 type redact struct{ V string }
 
 func (s redact) Validate() error { return ctxerr.New(context.Background(), "") }
-func (s *redact) Redacted() any  { s.V = redactedValue; return s }
+func (s *redact) Redact() any    { s.V = redactedValue; return s }
 
 type redactContext struct{ V string }
 
 func (s redactContext) Validate(ctx context.Context) error { return ctxerr.New(ctx, "") }
-func (s *redactContext) Redacted(context.Context) any      { s.V = redactedValue; return s }
+func (s *redactContext) Redact(context.Context) any        { s.V = redactedValue; return s }
 
 type noTransforms struct{ V string }
 
