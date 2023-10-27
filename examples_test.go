@@ -75,5 +75,5 @@ func TestInvalid(t *testing.T) {
 	b, _ := json.MarshalIndent(fields, "", "\t")
 	t.Log("err:", err.Error())
 	t.Log("fields:", string(b))
-	t.Error("show the log")
+	//t.Error("show the log")
 }
