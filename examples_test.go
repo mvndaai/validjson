@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mvndaai/ctxerr"
 	"github.com/mvndaai/validjson"
 	"github.com/stretchr/testify/require"
 )
@@ -63,13 +64,16 @@ func TestInvalid(t *testing.T) {
 		"required": false
 	}`)
 
+	ctx := context.Background()
+	ctx = ctxerr.SetField(ctx, "pathParam", "id")
+
 	var ex example
-	err := validjson.Unmarshal(context.Background(), body, &ex)
+	err := validjson.Unmarshal(ctx, body, &ex)
 	require.Error(t, err)
 
 	fields := err.(Fielder).Fields()
 	b, _ := json.MarshalIndent(fields, "", "\t")
 	t.Log("err:", err.Error())
 	t.Log("fields:", string(b))
-	//t.Error("show the log")
+	t.Error("show the log")
 }
