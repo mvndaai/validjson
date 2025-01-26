@@ -3,15 +3,10 @@ package validjson
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/mvndaai/ctxerr"
-)
-
-const (
-	ErrorCodeMissingBody   = "MISSING_BODY"
-	ErrorCodeMalformedBody = "MALFORMED_BODY"
-	ErrorCodeInvalidBody   = "INVALID_BODY"
 )
 
 const (
@@ -39,13 +34,13 @@ type ContextRedactor interface {
 
 func Unmarshal(ctx context.Context, b []byte, i any) error {
 	if len(b) == 0 {
-		return ctxerr.NewHTTP(ctx, ErrorCodeMissingBody, "Missing request body", http.StatusBadRequest, "missing request body")
+		return ctxerr.NewHTTP(ctx, "", "Missing request body", http.StatusBadRequest, "missing request body")
 	}
 
 	err := json.Unmarshal(b, i)
 	if err != nil {
 		ctx = ctxerr.SetField(ctx, fieldKeyBody, string(b))
-		return ctxerr.WrapHTTP(ctx, err, ErrorCodeMalformedBody, "Malformed request body", http.StatusBadRequest, "bad request body")
+		return ctxerr.WrapHTTP(ctx, err, "", "Malformed request body", http.StatusBadRequest, "bad request body")
 	}
 
 	switch v := i.(type) {
@@ -63,10 +58,18 @@ func Unmarshal(ctx context.Context, b []byte, i any) error {
 	}
 	if err != nil {
 		ctx = ctxerr.SetField(ctx, fieldKeyBody, TryToRedact(ctx, i))
-		return ctxerr.WrapHTTP(ctx, err, ErrorCodeInvalidBody, err.Error(), http.StatusBadRequest)
+		return ctxerr.WrapHTTP(ctx, err, "", err.Error(), http.StatusBadRequest, "failed validation")
 	}
 
 	return nil
+}
+
+func UnmarshalReadCloser(ctx context.Context, r io.ReadCloser, i any) error {
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return ctxerr.WrapHTTP(ctx, err, "", "Malformed request body", http.StatusBadRequest, "bad request body")
+	}
+	return Unmarshal(ctx, b, i)
 }
 
 func TryToRedact(ctx context.Context, a any) any {
